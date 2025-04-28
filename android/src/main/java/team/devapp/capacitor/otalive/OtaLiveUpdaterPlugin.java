@@ -62,6 +62,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
             // Загрузка текущей версии из SharedPreferences
             currentVersion = prefs.getString(KEY_CURRENT_VERSION, "1.0.0");
+            Log.d("OTA", "Run OTALIVE currentVersion: " + currentVersion);
             scheduleVersionCheck();
         }
 
