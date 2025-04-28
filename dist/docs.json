@@ -1,0 +1,185 @@
+{
+  "api": {
+    "name": "OtaLiveUpdaterPlugin",
+    "slug": "otaliveupdaterplugin",
+    "docs": "",
+    "tags": [],
+    "methods": [
+      {
+        "name": "applyUpdate",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "applyupdate"
+      },
+      {
+        "name": "rollBackUpdate",
+        "signature": "() => Promise<void>",
+        "parameters": [],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [],
+        "slug": "rollbackupdate"
+      },
+      {
+        "name": "checkpoint",
+        "signature": "(data: CheckpointData) => Promise<void>",
+        "parameters": [
+          {
+            "name": "data",
+            "docs": "",
+            "type": "CheckpointData"
+          }
+        ],
+        "returns": "Promise<void>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "CheckpointData"
+        ],
+        "slug": "checkpoint"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'newVersionAvailable', listenerFunc: (data: { version: string; description: string; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'newVersionAvailable'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { version: string; description: string; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenernewversionavailable-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'updateFailed', listenerFunc: (data: { error: string; }) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'updateFailed'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: { error: string; }) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerupdatefailed-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'updateSuccess', listenerFunc: (data: object) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'updateSuccess'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: object) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerupdatesuccess-"
+      },
+      {
+        "name": "addListener",
+        "signature": "(eventName: 'updateRolledBack', listenerFunc: (data: object) => void) => Promise<PluginListenerHandle>",
+        "parameters": [
+          {
+            "name": "eventName",
+            "docs": "",
+            "type": "'updateRolledBack'"
+          },
+          {
+            "name": "listenerFunc",
+            "docs": "",
+            "type": "(data: object) => void"
+          }
+        ],
+        "returns": "Promise<PluginListenerHandle>",
+        "tags": [],
+        "docs": "",
+        "complexTypes": [
+          "PluginListenerHandle"
+        ],
+        "slug": "addlistenerupdaterolledback-"
+      }
+    ],
+    "properties": []
+  },
+  "interfaces": [
+    {
+      "name": "CheckpointData",
+      "slug": "checkpointdata",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "name",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "string"
+        },
+        {
+          "name": "executionTime",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "number"
+        }
+      ]
+    },
+    {
+      "name": "PluginListenerHandle",
+      "slug": "pluginlistenerhandle",
+      "docs": "",
+      "tags": [],
+      "methods": [],
+      "properties": [
+        {
+          "name": "remove",
+          "tags": [],
+          "docs": "",
+          "complexTypes": [],
+          "type": "() => Promise<void>"
+        }
+      ]
+    }
+  ],
+  "enums": [],
+  "typeAliases": [],
+  "pluginConfigs": []
+}
