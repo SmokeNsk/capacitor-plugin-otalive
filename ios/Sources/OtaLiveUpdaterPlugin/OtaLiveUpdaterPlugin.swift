@@ -1,5 +1,5 @@
-import Foundation
 import Capacitor
+import Foundation
 import ZIPFoundation
 import BackgroundTasks
 /**
@@ -8,16 +8,15 @@ import BackgroundTasks
  */
 @objc(OtaLiveUpdaterPlugin)
 public class OtaLiveUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
-    public let identifier = "OtaLiveUpdaterPlugin"
-    public let jsName = "OtaLiveUpdater"
-    public let pluginMethods: [CAPPluginMethod] = [
-        CAPPluginMethod(name: "checkpoint",returnType: CAPPluginReturnPromise)
-    ]
-    private var currentVersion = "1.0.0"
+
+ 
+    private var currentVersion: String = "1.0.0"
     private var pendingVersionPath: String?
     private let storageDir = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     private let taskIdentifier = "team.devapp.capacitor.otalive.versionCheck"
     private var calledCheckpoints: Set<String> = []
+    private let userDefaults = UserDefaults.standard
+    private let currentVersionKey = "current_version"
 
     struct OTAUpdate: Codable {
         let version: String
@@ -34,6 +33,8 @@ public class OtaLiveUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
     }
 
     public override func load() {
+        // Загрузка текущей версии из UserDefaults
+        currentVersion = userDefaults.string(forKey: currentVersionKey) ?? "1.0.0"
         registerBackgroundTask()
         scheduleVersionCheck()
     }
@@ -127,6 +128,8 @@ public class OtaLiveUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
                 pendingVersionPath = storageDir.appendingPathComponent("new_version").path
                 webView?.load(URLRequest(url: URL(fileURLWithPath: "\(pendingVersionPath!)/index.html")))
                 try await validateCheckpoints()
+                // Сохраняем новую версию в UserDefaults
+                userDefaults.set(currentVersion, forKey: currentVersionKey)
                 call.resolve()
             } catch {
                 rollback()
@@ -189,7 +192,8 @@ public class OtaLiveUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
                     throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Checkpoint \(name) execution time mismatch"])
                 }
             } else {
-                throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Unknown checkpoint: \(name)"])
+                throw NSError(domain: "", code: -1, userInfo: [NS```swift
+                [NSLocalizedDescriptionKey: "Unknown checkpoint: \(name)"])
             }
         } catch {
             rollback()
@@ -228,7 +232,12 @@ public class OtaLiveUpdaterPlugin: CAPPlugin, CAPBridgedPlugin {
 
 extension Data {
     func sha256() -> String {
-        // Реализовать вычисление SHA256
-        return ""
+        import CommonCrypto
+        var hash = [UInt8](repeating: 0, count: Int(CC_SHA256_DIGEST_LENGTH))
+        self.withUnsafeBytes {
+            _ = CC_SHA256($0.baseAddress, CC_LONG(self.count), &hash)
+        }
+        return hash.map { String(format: "%02x", $0) }.joined()
     }
 }
+
