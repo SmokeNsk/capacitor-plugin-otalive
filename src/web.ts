@@ -1,10 +1,18 @@
 import { WebPlugin } from '@capacitor/core';
 
-import type { OtaLiveUpdaterPlugin } from './definitions';
+import type { CheckpointData, OtaLiveUpdaterPlugin } from './definitions';
 
+ 
 export class OtaLiveUpdaterWeb extends WebPlugin implements OtaLiveUpdaterPlugin {
-  async echo(options: { value: string }): Promise<{ value: string }> {
-    console.log('ECHO', options);
-    return options;
+  applyUpdate(): Promise<void> {
+    throw new Error('Method not implemented.');
   }
+  rollBackUpdate(): Promise<void> {
+    throw new Error('Method not implemented.');
+  }
+  checkpoint(data: CheckpointData): Promise<void> {
+    throw new Error('Method not implemented.'+data.name);
+  }
+ 
+ 
 }
