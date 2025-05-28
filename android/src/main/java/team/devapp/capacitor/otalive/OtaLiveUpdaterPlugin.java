@@ -102,7 +102,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         private final SharedPreferences prefs;
         private static Bridge bridge;
 
-        private static Plugin plugin;
+        private static OtaLiveUpdaterPlugin plugin;
         public VersionCheckWorker(Context context, WorkerParameters params) {
             super(context, params);
             this.storageDir = context.getFilesDir();
@@ -126,7 +126,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 if (isReleaseDateReached(latestUpdate.releaseDate)) {
                     Log.d(TAG, "Release date reached, extracting bundle");
                     extractBundle();
-                    notifyWebView(latestUpdate);
+                    plugin.notifyWebView(latestUpdate);
                 }
                 return Result.success();
             } catch (Exception e) {
@@ -219,17 +219,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             Log.d(TAG, "Bundle extracted");
         }
 
-        private void notifyWebView(OTAUpdate update) {
-            Log.d(TAG, "Notifying WebView about new version: " + update.version);
-            JSObject data = new JSObject();
-            data.put("version", update.version);
-            data.put("description", update.description);
 
-            if (bridge != null) {
-
-                bridge.triggerJSEvent("newVersionAvailable", "OtaLiveUpdater", data.toString());
-            }
-        }
 
         private String sha256(byte[] data) {
             try {
@@ -248,7 +238,17 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             }
         }
     }
+    private void notifyWebView(OTAUpdate update) {
+        Log.d(TAG, "Notifying WebView about new version: " + update.version);
+        JSObject data = new JSObject();
+        data.put("version", update.version);
+        data.put("description", update.description);
+        notifyListeners("newVersionAvailable",data,true);
+        /*if (bridge != null) {
 
+                    bridge.triggerJSEvent("newVersionAvailable", "OtaLiveUpdater", data.toString());
+        }*/
+    }
     @PluginMethod
     public void applyUpdate(PluginCall call) {
         executor.execute(() -> {
