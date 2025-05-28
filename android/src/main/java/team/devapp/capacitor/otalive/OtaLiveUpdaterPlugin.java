@@ -71,6 +71,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 .build();
 
         VersionCheckWorker.bridge=this.getBridge();
+        VersionCheckWorker.plugin=this;
 
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(VersionCheckWorker.class, 15, TimeUnit.MINUTES)
                 .setConstraints(constraints)
@@ -100,6 +101,8 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         private String currentVersion;
         private final SharedPreferences prefs;
         private static Bridge bridge;
+
+        private static Plugin plugin;
         public VersionCheckWorker(Context context, WorkerParameters params) {
             super(context, params);
             this.storageDir = context.getFilesDir();
@@ -223,7 +226,8 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             data.put("description", update.description);
 
             if (bridge != null) {
-                bridge.triggerJSEvent("newVersionAvailable", "window", data.toString());
+
+                bridge.triggerJSEvent("newVersionAvailable", "OtaLiveUpdater", data.toString());
             }
         }
 
