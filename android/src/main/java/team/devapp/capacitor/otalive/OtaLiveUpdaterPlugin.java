@@ -253,16 +253,19 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     public void applyUpdate(PluginCall call) {
         executor.execute(() -> {
             try {
-                Log.d(TAG, "Applying update");
                 pendingVersionPath = new File(getContext().getFilesDir(), "new_version").getAbsolutePath();
-                getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
+                // Переносим вызов WebView на главный поток
+                getActivity().runOnUiThread(() -> {
+                    getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
+                });
                 validateCheckpoints();
                 prefs.edit().putString(KEY_CURRENT_VERSION, currentVersion).apply();
-                Log.d(TAG, "Update applied, saved currentVersion: " + currentVersion);
                 call.resolve();
             } catch (Exception e) {
-                Log.e(TAG, "Apply update error: " + e.getMessage());
-                rollback();
+                // Переносим rollback на главный поток
+                getActivity().runOnUiThread(() -> {
+                    rollback();
+                });
                 JSObject errorData = new JSObject();
                 errorData.put("error", e.getMessage() != null ? e.getMessage() : "Unknown error");
                 notifyListeners("updateFailed", errorData);
@@ -374,10 +377,12 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     }
 
     private void rollback() {
-        Log.d(TAG, "Rolling back to previous version");
-        String currentPath = getContext().getFilesDir().getAbsolutePath() + "/current_version/index.html";
-        getBridge().getWebView().loadUrl("file://" + currentPath);
-        pendingVersionPath = null;
+        // Выполняем загрузку URL на главном потоке
+        getActivity().runOnUiThread(() -> {
+            String currentPath = getContext().getFilesDir().getAbsolutePath() + "/current_version/index.html";
+            getBridge().getWebView().loadUrl("file://" + currentPath);
+            pendingVersionPath = null;
+        });
     }
 
     @PluginMethod
