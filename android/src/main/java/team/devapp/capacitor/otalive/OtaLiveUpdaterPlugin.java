@@ -166,8 +166,10 @@ public class OtaLiveUpdaterPlugin extends Plugin {
 
         private void downloadAndStoreBundle(OTAUpdate update) throws IOException {
             Log.d(TAG, "Downloading bundle: " + update.bundleUrl);
+            RequestBody reqbody = RequestBody.create(null, new byte[0]);
             Request request = new Request.Builder()
                     .url("http://192.168.1.231:5111/otalive/v/" + update.bundleUrl)
+                    .post(reqbody)
                     .build();
             Response response = client.newCall(request).execute();
             if (response.body() == null) {
@@ -178,7 +180,9 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             File zipFile = new File(storageDir, "newversion.zip");
             try (FileOutputStream fos = new FileOutputStream(zipFile)) {
                 fos.write(bytes);
+                fos.close();
             }
+
             String computedSha = sha256(bytes);
             if (!update.sha256.equals(computedSha)) {
                 Log.e(TAG, "SHA256 mismatch: expected=" + update.sha256 + ", computed=" + computedSha);
