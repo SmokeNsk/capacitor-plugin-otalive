@@ -256,7 +256,9 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 pendingVersionPath = new File(getContext().getFilesDir(), "new_version").getAbsolutePath();
                 // Переносим вызов WebView на главный поток
                 getActivity().runOnUiThread(() -> {
-                    getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
+                    getBridge().getLocalServer().hostFiles("file://" + pendingVersionPath + "/index.html");
+                    getBridge().getWebView().reload();
+                    //getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
                 });
                 validateCheckpoints();
                 prefs.edit().putString(KEY_CURRENT_VERSION, currentVersion).apply();
