@@ -387,7 +387,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 "{\"error\":\"" + error + "\",\"timestamp\":\"" + System.currentTimeMillis() + "\"}"
         );
         Request request = new Request.Builder()
-                .url("https://mydomain.com/otalive/log")
+                .url("http://192.168.1.231:5111/otalive/log")
                 .post(body)
                 .build();
         executor.execute(() -> {
