@@ -18,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import com.getcapacitor.annotation.CapacitorPlugin;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -26,8 +27,9 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import okhttp3.*;
 
+@CapacitorPlugin(name = "OtaLiveUpdater")
 public class OtaLiveUpdaterPlugin extends Plugin {
-    private static final String TAG = "OTAPlugin";
+    private static final String TAG = "OtaLiveUpdater";
     private static final String WORK_NAME = "ota_version_check";
     private static final String PREFS_NAME = "ota_prefs";
     private static final String KEY_CURRENT_VERSION = "current_version";
@@ -68,6 +70,8 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 .setRequiredNetworkType(NetworkType.CONNECTED)
                 .build();
 
+        VersionCheckWorker.bridge=this.getBridge();
+
         PeriodicWorkRequest workRequest = new PeriodicWorkRequest.Builder(VersionCheckWorker.class, 15, TimeUnit.MINUTES)
                 .setConstraints(constraints)
                 .setBackoffCriteria(BackoffPolicy.LINEAR, 10, TimeUnit.MINUTES)
@@ -95,7 +99,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         private final File storageDir;
         private String currentVersion;
         private final SharedPreferences prefs;
-
+        private static Bridge bridge;
         public VersionCheckWorker(Context context, WorkerParameters params) {
             super(context, params);
             this.storageDir = context.getFilesDir();
@@ -213,7 +217,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             JSObject data = new JSObject();
             data.put("version", update.version);
             data.put("description", update.description);
-            CapacitorBridge bridge = CapacitorBridge.getInstance();
+
             if (bridge != null) {
                 bridge.triggerJSEvent("newVersionAvailable", "window", data.toString());
             }
