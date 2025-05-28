@@ -120,7 +120,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
 
             private List<OTAUpdate> fetchLastVersion() throws IOException {
                 Request request = new Request.Builder()
-                        .url("https://mydomain.com/otalive/lastversion")
+                        .url("https://192.168.1.231:5111/otalive/lastversion")
                         .build();
                 Response response = client.newCall(request).execute();
                 Log.d("OTA", "Loaded currentVersion: " + currentVersion);
@@ -144,7 +144,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
 
             private void downloadAndStoreBundle(OTAUpdate update) throws IOException {
                 Request request = new Request.Builder()
-                        .url("https://mydomain.com" + update.bundleUrl)
+                        .url("https://192.168.1.231:5111" + update.bundleUrl)
                         .build();
                 Response response = client.newCall(request).execute();
                 if (response.body() == null) throw new IOException("Empty bundle");
