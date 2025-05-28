@@ -26,7 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import okhttp3.*;
 
-public class OTAPlugin extends Plugin {
+public class OtaLiveUpdaterPlugin extends Plugin {
     private static final String TAG = "OTAPlugin";
     private static final String WORK_NAME = "ota_version_check";
     private static final String PREFS_NAME = "ota_prefs";
