@@ -135,7 +135,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         private List<OTAUpdate> fetchLastVersion() throws IOException {
             Log.d(TAG, "Fetching last version from server");
             Request request = new Request.Builder()
-                    .url("https://192.168.1.231:5111/otalive/lastversion")
+                    .url("http://192.168.1.231:5111/otalive/lastversion")
                     .build();
             Response response = client.newCall(request).execute();
             if (response.body() == null) {
@@ -167,7 +167,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         private void downloadAndStoreBundle(OTAUpdate update) throws IOException {
             Log.d(TAG, "Downloading bundle: " + update.bundleUrl);
             Request request = new Request.Builder()
-                    .url("https://192.168.1.231:5111" + update.bundleUrl)
+                    .url("http://192.168.1.231:5111" + update.bundleUrl)
                     .build();
             Response response = client.newCall(request).execute();
             if (response.body() == null) {
