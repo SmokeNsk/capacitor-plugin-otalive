@@ -280,7 +280,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         UpdateConfig config = loadUpdateConfig();
         calledCheckpoints.clear();
         CountDownLatch latch = new CountDownLatch(1);
-
+/*
         getBridge().getWebView().evaluateJavascript(
                 "window.registerCheckpoint = function(name, executionTime) {" +
                         "    window.dispatchEvent(new CustomEvent('checkpoint', { detail: { name: name, executionTime: executionTime } }));" +
@@ -294,7 +294,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                         "});",
                 null
         );
-
+*/
         executor.execute(() -> {
             try {
                 Log.d(TAG, "Waiting for checkpoints, timeout: " + config.timeoutCheckMillis + "ms");
