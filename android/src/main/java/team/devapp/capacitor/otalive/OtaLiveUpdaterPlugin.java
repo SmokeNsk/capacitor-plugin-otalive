@@ -18,6 +18,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashSet;
 import java.util.List;
+import java.net.URL;
 import java.util.Map;
 import java.util.Set;
 import com.getcapacitor.annotation.CapacitorPlugin;
@@ -25,8 +26,12 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.net.MalformedURLException;
 import okhttp3.*;
 
 @CapacitorPlugin(name = "OtaLiveUpdater")
@@ -44,7 +49,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     private SharedPreferences prefs;
     private SharedPreferences prefsWV;
     SharedPreferences.Editor editor;
-
+    private static final Phaser semaphoreReady = new Phaser(1);
     static class OTAUpdate {
         String version;
         String date;
@@ -267,15 +272,16 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 editor.putString(WebView.CAP_SERVER_PATH, pendingVersionPath);
                 editor.apply();
                 editor.commit();
+                _reload();
                 // Переносим вызов WebView на главный поток
-                getActivity().runOnUiThread(() -> {
+                /*getActivity().runOnUiThread(() -> {
                     Log.e(TAG,"UUUUUUUUUUURLLLL="+getBridge().getAppUrl());
                     Log.e(TAG,"UUUUUUUUUUURLLLL="+prefsWV.getString(WebView.CAP_SERVER_PATH,null));
 
                     //getBridge().setServerAssetPath("file://" + pendingVersionPath + "/index.html");
                     getBridge().getWebView().reload();
                     //getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
-                });
+                });*/
                 validateCheckpoints();
                 prefs.edit().putString(KEY_CURRENT_VERSION, currentVersion).apply();
                 call.resolve();
@@ -292,7 +298,79 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             }
         });
     }
+    private void semaphoreUp() {
+        Log.i(this.TAG, "semaphoreUp");
+        semaphoreReady.register();
+    }
+    protected boolean _reload() {
+        final String path = new File(getContext().getFilesDir(), "new_version").getAbsolutePath();///this.implementation.getCurrentBundlePath();
+        this.semaphoreUp();
+        Log.i(TAG, "Reloading: " + path);
 
+        AtomicReference<URL> url = new AtomicReference<>();
+        /*if (this.keepUrlPathAfterReload) {
+            try {
+                if (Looper.myLooper() != Looper.getMainLooper()) {
+                    Semaphore mainThreadSemaphore = new Semaphore(0);
+                    this.bridge.executeOnMainThread(() -> {
+                        try {
+                            url.set(new URL(this.bridge.getWebView().getUrl()));
+                        } catch (Exception e) {
+                            Log.e(CapacitorUpdater.TAG, "Error executing on main thread", e);
+                        }
+                        mainThreadSemaphore.release();
+                    });
+                    mainThreadSemaphore.acquire();
+                } else {
+                    try {
+                        url.set(new URL(this.bridge.getWebView().getUrl()));
+                    } catch (Exception e) {
+                        Log.e(CapacitorUpdater.TAG, "Error executing on main thread", e);
+                    }
+                }
+            } catch (InterruptedException e) {
+                Log.e(CapacitorUpdater.TAG, "Error waiting for main thread or getting the current URL from webview", e);
+            }
+        }*/
+
+        if (url.get() != null) {
+            if (true){ //this.implementation.isUsingBuiltin()) {
+                this.bridge.getLocalServer().hostAssets(path);
+            } else {
+                this.bridge.getLocalServer().hostFiles(path);
+            }
+
+            try {
+                URL finalUrl = null;
+                finalUrl = new URL(this.bridge.getAppUrl());
+                finalUrl = new URL(finalUrl.getProtocol(), finalUrl.getHost(), finalUrl.getPort(), url.get().getPath());
+                URL finalUrl1 = finalUrl;
+                this.bridge.getWebView()
+                        .post(() -> {
+                            this.bridge.getWebView().loadUrl(finalUrl1.toString());
+                            this.bridge.getWebView().clearHistory();
+                        });
+            } catch (MalformedURLException e) {
+                Log.e(TAG, "Cannot get finalUrl from capacitor bridge", e);
+
+                if (true/*this.implementation.isUsingBuiltin()*/) {
+                    this.bridge.setServerAssetPath(path);
+                } else {
+                    this.bridge.setServerBasePath(path);
+                }
+            }
+        } else {
+            if (/*this.implementation.isUsingBuiltin()*/true) {
+                this.bridge.setServerAssetPath(path);
+            } else {
+                this.bridge.setServerBasePath(path);
+            }
+        }
+
+        //this.checkAppReady();
+        this.notifyListeners("appReloaded", new JSObject());
+        return true;
+    }
     private void validateCheckpoints() throws Exception {
         Log.d(TAG, "Validating checkpoints");
         UpdateConfig config = loadUpdateConfig();
@@ -365,7 +443,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         try {
             UpdateConfig config = loadUpdateConfig();
             if (config.requiredCheckpoints.containsKey(name)) {
-                if (executionTime == config.requiredCheckpoints.get(name)) {
+                if (executionTime <= config.requiredCheckpoints.get(name)) {
                     calledCheckpoints.add(name);
                     Log.d(TAG, "Checkpoint called: " + name + ", executionTime: " + executionTime);
                     call.resolve();
