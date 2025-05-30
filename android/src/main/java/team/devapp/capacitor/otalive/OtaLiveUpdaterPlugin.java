@@ -1,5 +1,6 @@
 package team.devapp.capacitor.otalive;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.util.Log;
@@ -7,6 +8,7 @@ import androidx.work.*;
 import com.getcapacitor.*;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.getcapacitor.plugin.WebView;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -40,6 +42,8 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     private final Gson gson = new Gson();
     private final Set<String> calledCheckpoints = new HashSet<>();
     private SharedPreferences prefs;
+    private SharedPreferences prefsWV;
+    SharedPreferences.Editor editor;
 
     static class OTAUpdate {
         String version;
@@ -59,6 +63,9 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     public void load() {
         Log.d(TAG, "OTA Plugin loaded");
         prefs = getContext().getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
+        this.prefsWV = this.getContext().getSharedPreferences(WebView.WEBVIEW_PREFS_NAME, Activity.MODE_PRIVATE);
+        this.editor= prefsWV.edit();
+
         currentVersion = prefs.getString(KEY_CURRENT_VERSION, "1.0.0");
         Log.d(TAG, "Loaded currentVersion: " + currentVersion);
         scheduleVersionCheck();
@@ -249,16 +256,23 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                     bridge.triggerJSEvent("newVersionAvailable", "OtaLiveUpdater", data.toString());
         }*/
     }
+
     @PluginMethod
     public void applyUpdate(PluginCall call) {
+
         executor.execute(() -> {
             try {
                 pendingVersionPath = new File(getContext().getFilesDir(), "new_version").getAbsolutePath();
+
+                editor.putString(WebView.CAP_SERVER_PATH, pendingVersionPath);
+                editor.apply();
+                editor.commit();
                 // Переносим вызов WebView на главный поток
                 getActivity().runOnUiThread(() -> {
                     Log.e(TAG,"UUUUUUUUUUURLLLL="+getBridge().getAppUrl());
-                    Log.e(TAG,"UUUUUUUUUUURLLLL="+getBridge().getServerBasePath());
-                    getBridge().setServerAssetPath("file://" + pendingVersionPath + "/index.html");
+                    Log.e(TAG,"UUUUUUUUUUURLLLL="+prefsWV.getString(WebView.CAP_SERVER_PATH,null));
+
+                    //getBridge().setServerAssetPath("file://" + pendingVersionPath + "/index.html");
                     getBridge().getWebView().reload();
                     //getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
                 });
@@ -381,10 +395,13 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     }
 
     private void rollback() {
+        editor.putString(WebView.CAP_SERVER_PATH, "public");
+        editor.apply();
+        editor.commit();
+
         // Выполняем загрузку URL на главном потоке
         getActivity().runOnUiThread(() -> {
-            String currentPath = getContext().getFilesDir().getAbsolutePath() + "/current_version/index.html";
-            getBridge().getWebView().loadUrl("file://" + currentPath);
+            getBridge().getWebView().reload();
             pendingVersionPath = null;
         });
     }
