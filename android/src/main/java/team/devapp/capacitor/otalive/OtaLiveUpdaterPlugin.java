@@ -477,15 +477,17 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     }
 
     private void rollback() {
-        editor.putString(WebView.CAP_SERVER_PATH, "public");
-        editor.apply();
-        editor.commit();
+        if (!this.isUsingBuiltin()) {
+            editor.putString(WebView.CAP_SERVER_PATH, "public");
+            editor.apply();
+            editor.commit();
 
-        // Выполняем загрузку URL на главном потоке
-        getActivity().runOnUiThread(() -> {
-            getBridge().getWebView().reload();
-            pendingVersionPath = null;
-        });
+            // Выполняем загрузку URL на главном потоке
+            getActivity().runOnUiThread(() -> {
+                getBridge().getWebView().reload();
+                pendingVersionPath = null;
+            });
+        }
     }
 
     @PluginMethod
