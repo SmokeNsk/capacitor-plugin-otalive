@@ -1,5 +1,6 @@
 package team.devapp.capacitor.otalive;
 
+import android.os.Looper;
 import android.app.Activity;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -50,6 +51,8 @@ public class OtaLiveUpdaterPlugin extends Plugin {
     private SharedPreferences prefsWV;
     SharedPreferences.Editor editor;
     private static final Phaser semaphoreReady = new Phaser(1);
+    private Boolean keepUrlPathAfterReload = false;
+
     static class OTAUpdate {
         String version;
         String date;
@@ -273,23 +276,13 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                 editor.apply();
                 editor.commit();
                 _reload();
-                // Переносим вызов WebView на главный поток
-                /*getActivity().runOnUiThread(() -> {
-                    Log.e(TAG,"UUUUUUUUUUURLLLL="+getBridge().getAppUrl());
-                    Log.e(TAG,"UUUUUUUUUUURLLLL="+prefsWV.getString(WebView.CAP_SERVER_PATH,null));
-
-                    //getBridge().setServerAssetPath("file://" + pendingVersionPath + "/index.html");
-                    getBridge().getWebView().reload();
-                    //getBridge().getWebView().loadUrl("file://" + pendingVersionPath + "/index.html");
-                });*/
                 validateCheckpoints();
                 prefs.edit().putString(KEY_CURRENT_VERSION, currentVersion).apply();
                 call.resolve();
             } catch (Exception e) {
                 // Переносим rollback на главный поток
-                getActivity().runOnUiThread(() -> {
                     rollback();
-                });
+
                 JSObject errorData = new JSObject();
                 errorData.put("error", e.getMessage() != null ? e.getMessage() : "Unknown error");
                 notifyListeners("updateFailed", errorData);
@@ -302,13 +295,24 @@ public class OtaLiveUpdaterPlugin extends Plugin {
         Log.i(this.TAG, "semaphoreUp");
         semaphoreReady.register();
     }
+    public String getCurrentBundlePath() {
+        String path = this.prefs.getString(WebView.CAP_SERVER_PATH, "public");
+        if (path.trim().isEmpty()) {
+            return "public";
+        }
+        return path;
+    }
+    public Boolean isUsingBuiltin() {
+        return this.getCurrentBundlePath().equals("public");
+    }
+
     protected boolean _reload() {
         final String path = new File(getContext().getFilesDir(), "new_version").getAbsolutePath();///this.implementation.getCurrentBundlePath();
         this.semaphoreUp();
         Log.i(TAG, "Reloading: " + path);
 
         AtomicReference<URL> url = new AtomicReference<>();
-        /*if (this.keepUrlPathAfterReload) {
+        if (this.keepUrlPathAfterReload) {
             try {
                 if (Looper.myLooper() != Looper.getMainLooper()) {
                     Semaphore mainThreadSemaphore = new Semaphore(0);
@@ -316,7 +320,7 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                         try {
                             url.set(new URL(this.bridge.getWebView().getUrl()));
                         } catch (Exception e) {
-                            Log.e(CapacitorUpdater.TAG, "Error executing on main thread", e);
+                            Log.e(TAG, "Error executing on main thread", e);
                         }
                         mainThreadSemaphore.release();
                     });
@@ -325,16 +329,16 @@ public class OtaLiveUpdaterPlugin extends Plugin {
                     try {
                         url.set(new URL(this.bridge.getWebView().getUrl()));
                     } catch (Exception e) {
-                        Log.e(CapacitorUpdater.TAG, "Error executing on main thread", e);
+                        Log.e(TAG, "Error executing on main thread", e);
                     }
                 }
             } catch (InterruptedException e) {
-                Log.e(CapacitorUpdater.TAG, "Error waiting for main thread or getting the current URL from webview", e);
+                Log.e(TAG, "Error waiting for main thread or getting the current URL from webview", e);
             }
-        }*/
+        }
 
         if (url.get() != null) {
-            if (true){ //this.implementation.isUsingBuiltin()) {
+            if (this.isUsingBuiltin()) {
                 this.bridge.getLocalServer().hostAssets(path);
             } else {
                 this.bridge.getLocalServer().hostFiles(path);
@@ -353,14 +357,14 @@ public class OtaLiveUpdaterPlugin extends Plugin {
             } catch (MalformedURLException e) {
                 Log.e(TAG, "Cannot get finalUrl from capacitor bridge", e);
 
-                if (true/*this.implementation.isUsingBuiltin()*/) {
+                if (this.isUsingBuiltin()) {
                     this.bridge.setServerAssetPath(path);
                 } else {
                     this.bridge.setServerBasePath(path);
                 }
             }
         } else {
-            if (/*this.implementation.isUsingBuiltin()*/true) {
+            if (this.isUsingBuiltin()) {
                 this.bridge.setServerAssetPath(path);
             } else {
                 this.bridge.setServerBasePath(path);
